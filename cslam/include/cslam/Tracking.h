@@ -86,10 +86,13 @@ public:
     typedef boost::shared_ptr<Frame> frameptr;
 
 public:
+    bool current_frame_valid;
     Tracking(ccptr pCC, vocptr pVoc, viewptr pFrameViewer, mapptr pMap,
-             dbptr pKFDB, const string &strCamPath, size_t ClientId);
+             dbptr pKFDB, const string &strCamPath, const int sensor, size_t ClientId);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
+    cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);
+    cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp);
     cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp);
 
     // Pointer Setters
@@ -108,6 +111,8 @@ public:
     eTrackingState mState;
     eTrackingState mLastProcessedState;
 
+    // Input sensor
+    int mSensor;
     // Current Frame
     frameptr mCurrentFrame;
     cv::Mat mImGray;
@@ -136,6 +141,7 @@ protected:
     // Main tracking function. It is independent of the input sensor.
     void Track();
 
+    void StereoInitialization();
     // Map initialization for monocular
     void MonocularInitialization();
     void CreateInitialMapMonocular();
@@ -168,6 +174,8 @@ protected:
     mappingptr mpLocalMapper;
 
     //ORB
+    extractorptr mpORBextractorLeft;
+    extractorptr mpORBextractorRight;
     extractorptr mpORBextractor;
     extractorptr mpIniORBextractor;
 
@@ -182,7 +190,15 @@ protected:
     //Calibration matrix
     cv::Mat mK;
     cv::Mat mDistCoef;
+    float mbf;
 
+    // Threshold close/far points
+    // Points seen as close by the stereo/RGBD sensor are considered reliable
+    // and inserted from just one frame. Far points requiere a match in two keyframes.
+    float mThDepth;
+
+    // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
+    float mDepthMapFactor;
     //Current matches in frame
     int mnMatchesInliers;
 
@@ -197,6 +213,9 @@ protected:
 
     //Color order (true RGB, false BGR, ignored if grayscale)
     bool mbRGB;
+
+
+    list<mpptr> mlpTemporalPoints;
 };
 
 } //end namespace

@@ -96,7 +96,7 @@ public:
     void RunServer();
 
     //Frame Drawing
-    void SetTracker(trackptr pTracker){mpTracker = pTracker;}
+    void SetTracker(trackptr pTracker){mpTracker = pTracker.get();}
     void UpdateAndDrawFrame();
 
     //Map Drawing
@@ -124,7 +124,8 @@ private:
     //Frame Drawing
     //+++++++++++++++++++++++++++++++++
     bool mbDrawFrame;
-    trackptr mpTracker;
+    // trackptr mpTracker;
+    Tracking* mpTracker;
 
     bool DrawFrameTrue(){unique_lock<mutex> lockFrame(mMutexFrameDraw); return mbDrawFrame;}
     void UpdateAndDraw();

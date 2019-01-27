@@ -66,6 +66,12 @@ const std::string out2 ("output/");
 const std::string out3 = out1 + out2;
 const std::string outpath (out3);
 
+enum eSensor{
+    MONOCULAR=0,
+    STEREO=1,
+    RGBD=2
+};
+
 template<typename T> inline static T GetVal(std::string path, std::string paramname)
 {
     cv::FileStorage fSettings(path, cv::FileStorage::READ);
@@ -221,6 +227,8 @@ namespace tracking {
     const int miMaxFrames = GetVal<int>(conf,"Tracking.MaxFrames");
     const int miMatchesInliersThres = GetVal<int>(conf,"Tracking.nMatchesInliersThres");
     const fptype mfThRefRatio = GetVal<fptype>(conf,"Tracking.thRefRatio");
+    const fptype mfThRefRatioStereo = GetVal<fptype>(conf,"Tracking.thRefRatioStereo");
+    const fptype mfThRefRatioKF2 = GetVal<fptype>(conf,"Tracking.thRefRatioKF2");
     //Tracking Functions Inlier Thresholds
     const int miTrackWithRefKfInlierThresSearch = GetVal<int>(conf,"Tracking.TrackWithRefKfInlierThresSearch");
     const int miTrackWithRefKfInlierThresOpt = GetVal<int>(conf,"Tracking.TrackWithRefKfInlierThresOpt");

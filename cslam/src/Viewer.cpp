@@ -318,7 +318,15 @@ void Viewer::PubLocalMPs()
 void Viewer::UpdateFrame()
 {
     unique_lock<mutex> lock(mMutexFrameDraw);
-    mvCurrentKeys=mpTracker->mCurrentFrame->mvKeys;
+    auto tracker = mpTracker;
+    if (tracker->current_frame_valid){
+        for(int i=0;i<tracker->mCurrentFrame->mvKeys.size();i++){
+
+        }
+        mvCurrentKeys = tracker->mCurrentFrame->mvKeys;
+    }else{
+        return;
+    }
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);
     mvbMap = vector<bool>(N,false);
@@ -326,7 +334,8 @@ void Viewer::UpdateFrame()
 
     if(mpTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {
-        mvIniKeys=mpTracker->mInitialFrame->mvKeys;
+        
+        // mvIniKeys=mpTracker->mInitialFrame->mvKeys;
         mvIniMatches=mpTracker->mvIniMatches;
     }
     else if(mpTracker->mLastProcessedState==Tracking::OK)

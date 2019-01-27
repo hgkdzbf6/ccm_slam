@@ -56,6 +56,8 @@ Tracking.MinFrames: 0
 Tracking.MaxFrames: 20
 Tracking.nMatchesInliersThres: 15
 Tracking.thRefRatio: 0.9
+Tracking.thRefRatioStereo: 0.75
+Tracking.thRefRatioKF2: 0.4
 
 #Tracking.ScaleAfterKF: 20
 

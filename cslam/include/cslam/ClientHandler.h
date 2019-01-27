@@ -107,6 +107,9 @@ public:
 
     //---Agent side---
     void CamImgCb(sensor_msgs::ImageConstPtr pMsg);
+    void CamImgCbLeft(sensor_msgs::ImageConstPtr pMsg);
+    void CamImgCbRight(sensor_msgs::ImageConstPtr pMsg);
+
     void Reset();
 
 //    #ifdef LOGGING
@@ -122,6 +125,7 @@ private:
     void InitializeClient();
     void InitializeServer();
 
+    int mSensor;
     //infrastructure
     ccptr mpCC;
     mapptr mpMap;
@@ -143,6 +147,7 @@ private:
     ros::NodeHandle mNh;
     ros::NodeHandle mNhPrivate;
     ros::Subscriber mSubCam;
+    ros::Subscriber mSubCamRight;
 
     //threads
     threadptr mptMapping;
@@ -160,6 +165,11 @@ private:
     //mutexes
     mutex mMutexThreads;
     mutex mMutexReset;
+
+    cv::Mat imgLeft;
+    cv::Mat imgRight;
+    double time_stamp_left;
+    double time_stamp_right;
 };
 
 } //end ns

@@ -8,7 +8,7 @@
 
   <node pkg="tf" type="static_transform_publisher" name="linkC0_broadcaster" args="-100 300 5 -1.571 0 -2 world odomC0 100" /> 
 
-<node pkg="ccmslam" type="ccmslamClientNode" name="ccmslamClientNode0" args="$(find ccmslam)/conf/ORBvoc.txt $(arg cam)" output="screen">
+<node pkg="ccmslam" launch-prefix="gdb -ex run --args" type="ccmslamClientNode" name="ccmslamClientNode0" args="$(find ccmslam)/conf/ORBvoc.txt $(arg cam)" output="screen">
 
   <!-- ++++++++++++++++++++++++++++++++++++++++++++++ -->
   <!-- Agent Specific Params - !!!MUST BE ADJUSTED!!! -->
@@ -17,6 +17,7 @@
   <param name="~ClientId" type="int" value="0" />
 
   <param name="~TopicNameCamSub" type="string" value="/cam0/image_raw" />
+  <param name="~TopicNameCamSubRight" type="string" value="/cam1/image_raw" />
 
   <param name="~MapInTopicName" type="string" value="MapOutServer0" unless="$(arg dist)" />
   <param name="~MapInTopicName" type="string" value="MapOutServer0Disturbed" if="$(arg dist)" /> 

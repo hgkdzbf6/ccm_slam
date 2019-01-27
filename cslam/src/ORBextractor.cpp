@@ -65,9 +65,10 @@ const int HALF_PATCH_SIZE = 15;
 const int EDGE_THRESHOLD = 19;
 
 
-static float IC_Angle(const Mat& image, Point2f pt,  const vector<int> & u_max)
+
+static float IC_Angle(const Mat& image, Point2f pt, const vector<int> & u_max)
 {
-    int m_01 = 0, m_10 = 0;
+    int m_01 = 0,m_10 = 0;
 
     const uchar* center = &image.at<uchar> (cvRound(pt.y), cvRound(pt.x));
 

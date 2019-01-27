@@ -46,11 +46,16 @@ ClientHandler::ClientHandler(ros::NodeHandle Nh, ros::NodeHandle NhPrivate, vocp
     if(mSysState == eSystemState::CLIENT)
     {
         std::string TopicNameCamSub;
+        std::string TopicNameCamSubRight;
 
         mNhPrivate.param("TopicNameCamSub",TopicNameCamSub,string("nospec"));
-        mSubCam = mNh.subscribe<sensor_msgs::Image>(TopicNameCamSub,10,boost::bind(&ClientHandler::CamImgCb,this,_1));
+        mNhPrivate.param("TopicNameCamSubRight",TopicNameCamSubRight,string("nospec"));
 
-        cout << "Camera Input topic: " << TopicNameCamSub << endl;
+        mSubCam = mNh.subscribe<sensor_msgs::Image>(TopicNameCamSub,10,boost::bind(&ClientHandler::CamImgCbLeft,this,_1));
+        mSubCamRight = mNh.subscribe<sensor_msgs::Image>(TopicNameCamSubRight,10,boost::bind(&ClientHandler::CamImgCbRight,this,_1));
+
+        cout << "Camera Input Left topic: " << TopicNameCamSub << endl;
+        cout << "Camera Input Right topic: " << TopicNameCamSubRight << endl;
     }
 }
 #ifdef LOGGING
@@ -172,8 +177,14 @@ void ClientHandler::InitializeClient()
     usleep(10000);
     //+++++ Initialize the tracking thread +++++
     //(it will live in the main thread of execution, the one that called this constructor)
-    mpTracking.reset(new Tracking(mpCC, mpVoc, mpViewer, mpMap, mpKFDB, mstrCamFile, mClientId));
-    usleep(10000);
+    mSensor = params::eSensor::STEREO;
+    mpTracking.reset(new Tracking(mpCC, mpVoc, mpViewer, mpMap, mpKFDB, mstrCamFile,mSensor, mClientId));
+    usleep(100000);
+    if(mpTracking->current_frame_valid){
+        cout << "hello!" << endl;
+    }else{
+        cout << "not hello" << endl;
+    }
     mpTracking->SetCommunicator(mpComm);
     mpTracking->SetLocalMapper(mpMapping);
     mpViewer->SetTracker(mpTracking);
@@ -182,6 +193,7 @@ void ClientHandler::InitializeClient()
     //Should no do that before, a fast system might already use a pointe before it was set -> segfault
     mptMapping.reset(new thread(&LocalMapping::RunClient,mpMapping));
     mptComm.reset(new thread(&Communicator::RunClient,mpComm));
+    usleep(10000);
     mptViewer.reset(new thread(&Viewer::RunClient,mpViewer));
     usleep(10000);
 }
@@ -287,6 +299,73 @@ void ClientHandler::CamImgCb(sensor_msgs::ImageConstPtr pMsg)
     }
 
     mpTracking->GrabImageMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+}
+
+void ClientHandler::CamImgCbLeft(sensor_msgs::ImageConstPtr pMsg)
+{
+    // Copy the ros image message to cv::Mat.
+    cv_bridge::CvImageConstPtr cv_ptr;
+
+    try
+    {
+        cv_ptr = cv_bridge::toCvShare(pMsg);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    // Check reset
+    {
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracking->Reset();
+            mbReset = false;
+        }
+    }
+
+    imgLeft = cv_ptr->image.clone();
+    time_stamp_left = cv_ptr->header.stamp.toSec();
+    ROS_INFO_STREAM("left: "<<time_stamp_left);
+    if(fabs(time_stamp_right - time_stamp_left)<5e-2){
+        // ROS_INFO_STREAM(time_stamp_right<<time_stamp_left);
+        mpTracking->GrabImageStereo(imgLeft,imgRight,time_stamp_right);
+    }
+
+}
+void ClientHandler::CamImgCbRight(sensor_msgs::ImageConstPtr pMsg)
+{
+    // Copy the ros image message to cv::Mat.
+    cv_bridge::CvImageConstPtr cv_ptr;
+
+    try
+    {
+        cv_ptr = cv_bridge::toCvShare(pMsg);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    // Check reset
+    {
+        unique_lock<mutex> lock(mMutexReset);
+        if(mbReset)
+        {
+            mpTracking->Reset();
+            mbReset = false;
+        }
+    }
+    imgRight = cv_ptr->image.clone();
+    time_stamp_right = cv_ptr->header.stamp.toSec();
+    ROS_INFO_STREAM("right: "<<time_stamp_right);
+    if(fabs(time_stamp_right - time_stamp_left)<=5e-2){
+        // ROS_INFO_STREAM(time_stamp_right<<time_stamp_left);
+        mpTracking->GrabImageStereo(imgLeft,imgRight,time_stamp_right);
+    }
 }
 
 void ClientHandler::Reset()

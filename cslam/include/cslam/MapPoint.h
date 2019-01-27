@@ -76,7 +76,8 @@ public:
 public:
     //---constructor---
     MapPoint(const cv::Mat &Pos, kfptr pRefKF, mapptr pMap, size_t ClientId, commptr pComm, eSystemState SysState, size_t UniqueId);
-
+    MapPoint(const cv::Mat &Pos, frameptr pFrame, mapptr pMap, const int &idxF, size_t ClientId, commptr pComm, eSystemState SysState, size_t UniqueId);
+ 
     MapPoint(ccmslam_msgs::MP *pMsg, mapptr pMap, commptr pComm, eSystemState SysState, size_t UniqueId = defid, g2o::Sim3 g2oS_wm_wc = g2o::Sim3()); //constructor for messages
 
     void EstablishInitialConnectionsServer(); //this is necessary, because we cannot use shared_from_this() in constructor
@@ -177,6 +178,7 @@ public:
     // Variables used by the tracking
     float mTrackProjX;
     float mTrackProjY;
+    float mTrackProjXR;
     bool mbTrackInView;
     int mnTrackScaleLevel;
     float mTrackViewCos;

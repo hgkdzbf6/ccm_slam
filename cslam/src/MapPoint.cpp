@@ -28,7 +28,6 @@ namespace cslam {
 
 long unsigned int MapPoint::nNextId=0;
 mutex MapPoint::mGlobalMutex;
-
 MapPoint::MapPoint(const cv::Mat &Pos, kfptr pRefKF, mapptr pMap, size_t ClientId, commptr pComm, eSystemState SysState, size_t UniqueId)
     : mFirstKfId(pRefKF->mId), mFirstFrame(pRefKF->mFrameId), mUniqueId(UniqueId),
       nObs(0), mTrackReferenceForFrame(defpair),mLastFrameSeen(defpair),
@@ -72,6 +71,68 @@ MapPoint::MapPoint(const cv::Mat &Pos, kfptr pRefKF, mapptr pMap, size_t ClientI
     mpMap->UnLockPointCreation();
 
     if(mUniqueId == 0 && !mId.first == 0) cout << "\033[1;31m!!!!! ERROR !!!!!\033[0m MapPoint::MapPoint(..): mUniqueId not set" << endl;
+}
+
+MapPoint::MapPoint(const cv::Mat &Pos, frameptr pFrame, mapptr pMap, const int &idxF, size_t ClientId, commptr pComm, eSystemState SysState, size_t UniqueId)
+// MapPoint::MapPoint(const cv::Mat &Pos, frameptr pFrame, mapptr pMap, const int &idxF, size_t ClientId, commptr pComm, eSystemState SysState, size_t UniqueId)
+    : mFirstFrame(pFrame->mId), mUniqueId(UniqueId),
+      nObs(0), mTrackReferenceForFrame(defpair),mLastFrameSeen(defpair),
+      mpReplaced(nullptr), mfMinDistance(0), mfMaxDistance(0),
+      mpRefKF(nullptr), mnVisible(1), mnFound(1), mbBad(false),
+      mpMap(pMap),
+      mbIsEmpty(false), mbPoseLock(false),mbPoseChanged(false), mbSentOnce(false),mbInOutBuffer(false),
+      mLoopPointForKF_LC(defpair), mCorrectedByKF_LC(defpair),mCorrectedReference_LC(-1),
+      mLoopPointForKF_MM(defpair), mCorrectedByKF_MM(defpair),mCorrectedReference_MM(-1),
+      mBAGlobalForKF(defpair),mBALocalForKF(defpair),
+      mFuseCandidateForKF(defpair),
+      mSysState(SysState),mbDoNotReplace(false),mbOmitSending(false),
+      mbLoopCorrected(false),mbMultiUse(false),
+      mbAck(false),mbFromServer(false),mbUpdatedByServer(false),mInsertedWithKF(-1),
+      mMaxObsKFId(0),mbSendFull(true)
+{
+       mFirstKfId = pair<size_t,size_t>(-1,-1);
+//     mspComm.insert(pComm);
+
+//     Pos.copyTo(mWorldPos);
+
+      cv::Mat Ow = pFrame->GetCameraCenter();
+      mNormalVector = mWorldPos - Ow;
+      mNormalVector = mNormalVector/cv::norm(mNormalVector);
+
+//     cv::Mat PC = Pos - Ow;
+//     const float dist = cv::norm(PC);
+//     const int level = pFrame->mvKeysUn[idxF].octave;
+//     const float levelScaleFactor =  pFrame->mvScaleFactors[level];
+//     const int nLevels = pFrame->mnScaleLevels;
+
+//     mfMaxDistance = dist*levelScaleFactor;
+//     mfMinDistance = mfMaxDistance/pFrame->mvScaleFactors[nLevels-1];
+
+//     pFrame->mDescriptors.row(idxF).copyTo(mDescriptor);
+
+//     if(mpRefKF)
+//     {
+//         cv::Mat T_cref_w =  mpRefKF->GetPose();
+
+//         cv::Mat Rcw = T_cref_w.rowRange(0,3).colRange(0,3);
+//         cv::Mat tcw = T_cref_w.rowRange(0,3).col(3);
+
+//         mRefPos = Rcw * mWorldPos + tcw;
+//     }
+//     else
+//     {
+//         cout << "\033[1;31m!!!!! FATAL ERROR !!!!!\033[0m " << __func__ << __LINE__ << ": MP has no parent" << endl;
+//         throw infrastructure_ex();
+//     }
+
+//     mNormalVector = cv::Mat::zeros(3,1,CV_32F);
+
+//     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
+//     while(!mpMap->LockPointCreation()){usleep(params::timings::miLockSleep);}
+//     mId=make_pair(nNextId++,ClientId);
+//     mpMap->UnLockPointCreation();
+
+//     if(mUniqueId == 0 && !mId.first == 0) cout << "\033[1;31m!!!!! ERROR !!!!!\033[0m MapPoint::MapPoint(..): mUniqueId not set" << endl;
 }
 
 MapPoint::MapPoint(ccmslam_msgs::MP *pMsg, mapptr pMap, commptr pComm, eSystemState SysState, size_t UniqueId, g2o::Sim3 g2oS_wm_wc)
