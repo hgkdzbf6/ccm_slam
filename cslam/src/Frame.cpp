@@ -646,7 +646,7 @@ void Frame::ComputeStereoMatches()
             mvDepth[vDistIdx[i].second]=-1;
         }
     }
-    trace(mvDepth);
+    // trace(mvDepth);
 }
 
 
